@@ -4,7 +4,7 @@
 extern int globalComparacoes;
 
 int main(int argc, char const *argv[]){
-    
+    /*
     setlocale(LC_ALL, "");
 
     int tamanhoNomeBase = (int)(strlen(DATABASE)-4);// pega só a parte sem extensão do nome da base dados
@@ -34,7 +34,9 @@ int main(int argc, char const *argv[]){
     }while(choice != 5);    
 
     fputs("\n\nObrigado por testar o programa...", stdout);
-
+    */
+    printf("size %d\n", sizeof(TUserInvest));
+    printf("size %d\n", sizeof(TDataHash));
     getchar();
     return 0;
 }

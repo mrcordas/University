@@ -5,7 +5,7 @@
 
 #define MAX_REG_PARTITION 10 //maximo registros por partição
 
-typedef struct Investidor {
+typedef struct Investidor {// tamenho completo 299bytes
     int cod; //codigo do usuario investidor
     char nome[50];
     char cpf[20];

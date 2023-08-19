@@ -13,6 +13,8 @@
 #include "utilitarios.h"
 #include "arvoreVencedor.h"
 
+#include "hash.h"
+
 #define LOGFILE "log.txt"
 
 #ifdef _WIN32 
