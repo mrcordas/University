@@ -36,7 +36,7 @@ rebuild: clean all
 .PHONY: clean
 clean:
 	@rm -rf $(OBJ) $(DEBUG_DIR)*
-
+#	@rm -rf $(OBJ) $(DEBUG_DIR)*.exe
 .PHONY: run
 run:
 	@echo running....

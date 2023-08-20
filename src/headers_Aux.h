@@ -12,7 +12,6 @@
 #include "investidor.h"
 #include "utilitarios.h"
 #include "arvoreVencedor.h"
-
 #include "hash.h"
 
 #define LOGFILE "log.txt"

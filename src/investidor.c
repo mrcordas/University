@@ -14,6 +14,8 @@ void writeUser(TUserInvest *user, FILE *out) {
         fwrite(&user->carteira[i].classe, sizeof(user->carteira[i].classe), 1, out);
         fwrite(&user->carteira[i].quantidade, sizeof(int), 1, out);
     }
+    fwrite(&user->hash.prox, sizeof(int), 1, out);
+    fwrite(&user->hash.oculpado, sizeof(bool), 1, out);
 }
 
 //le um usuario do arquivo
@@ -31,6 +33,10 @@ TUserInvest *readUser(FILE *in) {
         fread(&user->carteira[i].classe, sizeof(user->carteira[i].classe), 1, in);
         fread(&user->carteira[i].quantidade, sizeof(int), 1, in);
     };
+
+    fread(&user->hash.prox, sizeof(int), 1, in);
+    fread(&user->hash.oculpado, sizeof(bool), 1, in);
+
     return user;
 }
 
@@ -67,12 +73,60 @@ void printUser(TUserInvest user) {
     }
     printf("%3d de %s|%s|%s|\n", user.carteira[i].quantidade, user.carteira[i].tag, user.carteira[i].nome, strClasse);
   }
+    printf("proxHash: %d", user.hash.prox);
   printf("\n");
 }
 
+//imprimir um usuario e carteiras de investimentos
+void printUserDisco(TUserInvest user, FILE *f) {
+    fprintf(f,"\nCodigo: %02d", user.cod);
+    fprintf(f,"\nCPF: %s", user.cpf);
+    fprintf(f,"\nNome: %s\n", user.nome);
+    fprintf(f,"Ativos na carteira:\n");
+    char strClasse[15];
+    for(int i = 0; i < 5; i++){
+        switch (user.carteira[i].classe){
+            case DOLAR:
+                sprintf(strClasse, "DOLAR");
+                break;
+            case ETF:
+                sprintf(strClasse, "ETF");
+                break;
+            case FII:
+                sprintf(strClasse, "FII");
+                break;
+            case MULTIMERCADOS:
+                sprintf(strClasse, "MULTIMERCADO");
+                break;
+            case CRIPTOMOEDAS:
+                sprintf(strClasse, "CRIPTOMOEDA");
+                break;
+            case OURO:
+                sprintf(strClasse, "OURO");
+                break;    
+            default:
+                sprintf(strClasse, "ACAO");
+                break;
+        }
+        fprintf(f,"%3d de %s|%s|%s|\n", user.carteira[i].quantidade, user.carteira[i].tag, user.carteira[i].nome, strClasse);
+    }
+
+    fprintf(f, "proxHash: %d", user.hash.prox);
+    fprintf(f, "\n");
+}
 //tamanho da estrutura de usuario
 int sizeRegUser(){
-    return sizeof(TUserInvest) - 17; //18 é o alinhamento da estrutura para arquivo
+    //return sizeof(TUserInvest) - 17; //17 é o alinhamento da estrutura para arquivo
+    TUserInvest temp;
+    int size = sizeof(temp.cod) + sizeof(temp.cpf) + sizeof(temp.nome) + 
+    5 * ( sizeof(temp.carteira->classe) + 
+          sizeof(temp.carteira[0].nome) + 
+          sizeof(temp.carteira[0].quantidade) + 
+          sizeof(temp.carteira[0].tag)
+        ) + 
+    sizeof(temp.hash.oculpado) + sizeof(temp.hash.prox);
+
+    return size;
 }
 
 //contagem de usuarios

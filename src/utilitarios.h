@@ -9,7 +9,7 @@ typedef struct _FileXUser{
 
 int menuPrincipal();
 
-int createDatabase();
+int createDatabase(char *nameBase);
 
 void initializeDataBase(FILE* file, int numberRecords);
 
@@ -28,6 +28,8 @@ void menuOrdena(char *fileNameBase);
 void printFileBase(const char  *fileNameBase);
 
 void menuBusca(const char *fileNameBase);
+
+void menuHash(char *fileBase, char *fileHash);
 
 void strClock(char *sClock);
 

@@ -1,18 +1,16 @@
 #ifndef HASH_H
 #define HASH_H
 
-//#include "investidor.h"
-#include "headers_Aux.h"
-//usado pra criar a estrutura de manipulação da informação principal(TuserInvest)
-//em conjunto do controle da tabela hash a ser criada apartir do banco de dados original
-typedef struct{
-    TUserInvest *user;
-    int prox; // armazena a proxima posição fseek ou -1 no ultimo nulo da lista encadeada em disco
-    bool oculpado; // armazena se o registro ja foi apagado ou nao
-}TUserDataHash;
 
-void writeDataHash(TUserDataHash *userDataHash, FILE *out);
+void criaTabelaHash(int compartimentos, char *tabelaHash);
 
-TUserDataHash *readDataHash(FILE *in);
+void montaTabelaHash(char *baseDeDados, char *tabelaHash);
 
+int calculaHash(int cod, int compatimentos);
+
+TUserInvest *buscaInHash(int cod,  FILE *fileBase, FILE *fileHash);
+
+void printTabela(char *baseDeDados, char *tabelaHash);
+
+int countCompartimento(FILE *file);
 #endif

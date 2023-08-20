@@ -34,7 +34,7 @@ int menuPrincipal(){
 }
 
 // funcao que verifica e e chama a funcao initializeDataBase
-int createDatabase(){
+int createDatabase(char *nameBase){
     unsigned int quant_Reg = 0;
     char answer = 'n';
     int sinalcreate = 1;
@@ -54,12 +54,28 @@ int createDatabase(){
     if(sinalcreate){
         fputs("\nDigite a quantidade de registro a criar: ", stdout);
         scanf("%u", &quant_Reg);
+        
         file = fopen(DATABASE, "w+b");
         if(file){
             initializeDataBase(file, quant_Reg);//fun��o geradora do banco dados
         }else{
             perror("Erro");
             exit(EXIT_FAILURE);
+        }
+
+        FILE *test = NULL;
+        char fileNameOrdered[40];
+        sprintf(fileNameOrdered, "%s_ordered.dat", nameBase);
+        test = fopen(fileNameOrdered, "rb");
+        if(test){
+            fclose(test);
+            remove(fileNameOrdered);
+        }
+
+        test = fopen("tabHash.dat", "rb");
+        if(test){
+            fclose(test);
+            remove("tabHash.dat");
         }
         
     }
@@ -125,6 +141,9 @@ void initializeDataBase(FILE* file, int numberRecords) {
             user.carteira[i].quantidade = rand()%1000; // entra 0 e 1000 ativos
             
         }
+        user.hash.prox = -1;
+        user.hash.oculpado = true;
+
         fseek(file, i * sizeRegUser(), SEEK_SET);
         writeUser(&user, file);
     }
@@ -613,15 +632,17 @@ static int menuPrintFileBase(){
 
     return atoi(choice);
 }
+
 void printFileBase(const char *fileNameBase){
     system(CLEAR);
-    FILE *file;
+    FILE *file, *debugFile;
     int choice = menuPrintFileBase();
-    char fileNameOrdered[40];
+    char fileNameOrdered[40], debugFileName[40];
     sprintf(fileNameOrdered, "%s_ordered.dat", fileNameBase);
 
     switch (choice){
     case 1:
+        sprintf(debugFileName, "debug_%s_ordered.txt", fileNameBase);
         file = fopen(fileNameOrdered, "rb");
         //file = fopen("temp\\base_dados_partition_5", "rb");
         if(!file){
@@ -629,8 +650,10 @@ void printFileBase(const char *fileNameBase){
             getchar();
             return;
         }
+
         break;
     case 2:
+        sprintf(debugFileName, "debug_%s.txt", fileNameBase);
         file = fopen(DATABASE, "rb");
         if(!file){
             fputs("\nbase de dados inexistente! crie na opcao 1 menu principal...", stdout);
@@ -642,17 +665,21 @@ void printFileBase(const char *fileNameBase){
         return;
         break;
     }
-    
+
+    debugFile = fopen(debugFileName, "w");
+
     TUserInvest *user;
-    user = readUser(file); 
+    user = readUser(file);
     while(!feof(file)){
-        printUser(*user);
+        //printUser(*user);
+        printUserDisco(*user, debugFile);
         puts("-----//-----------//");
         free(user);
         user = readUser(file);
     }
 
     fclose(file);
+    fclose(debugFile);
     fputs("\n\nTudo certo, pressione alguma tecla para continuar...", stdout);
     getchar();
 
@@ -674,11 +701,12 @@ void menuBusca(const char *fileNameBase){
         puts("1. Sequencial no arquivo original(nao ordenado)");
         puts("2. Sequencial no arquivo ordenado");
         puts("3. Binaria no arquivo ordenado");
-        puts("4. retornar menu principal");
+        puts("4. Tabela Hash");
+        puts("5. retornar menu principal");
         printf("\n\nEscolha uma opcao: ");
 
         fgets(choice, 4, stdin);
-        invalidChoiceFlag = (choice[0] == '\n' || strlen(choice) > 2 || choice[0] < '\x31'|| choice[0] > '\x34');
+        invalidChoiceFlag = (choice[0] == '\n' || strlen(choice) > 2 || choice[0] < '\x31'|| choice[0] > '\x35');
 
         if(invalidChoiceFlag){
             fputs("\nOpcao invalida ... ", stdout);
@@ -691,8 +719,13 @@ void menuBusca(const char *fileNameBase){
         
     }while(invalidChoiceFlag);
 
-    if(atoi(choice) == 4)
+    if(atoi(choice) == 5)
         return;
+
+    if(atoi(choice) == 4){
+        menuHash(DATABASE, "tabHash.dat");
+        return;
+    }
 
     FILE *file;
     FILE *logfile;
@@ -731,7 +764,7 @@ void menuBusca(const char *fileNameBase){
         /*-------------------------- LOG ---------------------------------------*/
         userFound = itemSearchSequencial(codSearch, file, countRegUser(file));
 
-    }else{
+    }else if(atoi(choice) == 3){
         file = fopen(fileNameOrdered, "rb");
          if(!file){
             fputs("Voce nao criou ou ordenou a base de dados ainda!", stdout);
@@ -744,6 +777,7 @@ void menuBusca(const char *fileNameBase){
         fclose(logfile);
         /*-------------------------- LOG ---------------------------------------*/
         userFound = itemSearchBin(codSearch, file, countRegUser(file));
+
     }
 
     if(userFound){
@@ -769,6 +803,122 @@ void menuBusca(const char *fileNameBase){
     fclose(logfile);
     fclose(file);
     menuBusca(fileNameBase);
+}
+
+void menuHash(char *fileBaseName, char *fileHashName){
+    system(CLEAR);
+    char choice[5];
+    int invalidChoiceFlag = 1; // se for escolha invalida
+    do{
+        txtLogo();
+        puts("1. Montar tabela");
+        puts("2. buscar registro");
+        puts("3. imprimir tabela");
+        puts("4. retornar menu principal");
+        printf("\n\nEscolha uma opcao: ");
+
+        fgets(choice, 4, stdin);
+        invalidChoiceFlag = (choice[0] == '\n' || strlen(choice) > 2 || choice[0] < '\x31'|| choice[0] > '\x34');
+
+        if(invalidChoiceFlag){
+            fputs("\nOpcao invalida ... ", stdout);
+            choice[0] = 0; //coloca um caracter fora do range pra while continuar
+            getchar();
+            system(CLEAR);
+            system(CLEAR);
+        }
+           
+        
+    }while(invalidChoiceFlag);
+
+    if(atoi(choice) == 4)
+        return;
+
+    if(atoi(choice) == 1){
+        FILE *test = fopen(fileHashName, "rb"); //verifica se existe
+        if(!test){
+            int qtd_compart;
+            printf("Quantos compartimentos quer na tabela?: ");
+            scanf("%d", &qtd_compart);
+            setbuf(stdin, NULL);
+            criaTabelaHash(qtd_compart, fileHashName);
+            montaTabelaHash(fileBaseName, fileHashName);
+            fputs("tabela criada e montada com sucesso!\n", stdout);
+        }else{
+            fputs("Tabela para o base atual ja existe OK!\n", stdout);
+        }
+        fclose(test);
+    }else if(atoi(choice) == 2){
+        globalComparacoes = 0;
+
+        FILE *fileBase, *fileHash, *logfile;
+        int codSearch;
+        TUserInvest *userFound;
+
+        fputs("digite o codido do investidor a procurar: ", stdout);
+        scanf("%d", &codSearch);
+        setbuf(stdin, NULL);
+
+        fileBase = fopen(fileBaseName, "rb");
+        fileHash = fopen(fileHashName, "rb");
+        if(!fileBase || !fileHash){
+            fclose(fileBase);
+            fclose(fileHash);
+            fputs("Voce nao criou a base de dados ou tabela hash!", stdout);
+            getchar();
+            return;
+        }
+
+         /*-------------------------- LOG ---------------------------------------*/
+        logfile = fopen(LOGFILE, "a");
+        fprintf(logfile, "busca por tabela Hash\n");
+        fclose(logfile);
+        /*-------------------------- LOG ---------------------------------------*/
+
+        clock_t marcaTempo;
+        marcaTempo = clock();
+
+        userFound = buscaInHash(codSearch, fileBase, fileHash);
+
+        marcaTempo = clock() - marcaTempo;
+
+        if(userFound){
+            fputs("Investidor encontrado!\n", stdout);
+            printUser(*userFound);
+            /*-------------------------- LOG ---------------------------------------*/
+            logfile = fopen(LOGFILE, "a");;
+            fprintf(logfile,"Identificador procurado: %d\n", codSearch);
+            fprintf(logfile, "Numero de comparacoes: %d\n", globalComparacoes);
+            fprintf(logfile, "Tempo de busca: %.3f segundos\n", ((double)marcaTempo / CLOCKS_PER_SEC));
+            fprintf(logfile, "Encontrado: Sim\n");
+            fprintf(logfile, "----------------------------------------------------\n");
+            fclose(logfile);;
+            /*-------------------------- LOG ---------------------------------------*/
+        }else{
+            fputs("Investidor nao encontrado! ", stdout);
+            /*-------------------------- LOG ---------------------------------------*/
+            logfile = fopen(LOGFILE, "a");
+            fprintf(logfile,"Identificador procurado: %d\n", codSearch);
+            fprintf(logfile, "Numero de comparacoes: %d\n", globalComparacoes);
+            fprintf(logfile, "Tempo de busca: %.3f segundos\n", ((double)marcaTempo / CLOCKS_PER_SEC));
+            fprintf(logfile, "Encontrado: Nao\n");
+
+            fprintf(logfile, "----------------------------------------------------\n");
+            fclose(logfile);
+            /*-------------------------- LOG ---------------------------------------*/
+        }
+        
+        fclose(fileBase);
+        fclose(fileHash);
+    }else{
+        printf("\n");
+        printTabela(fileBaseName, fileHashName);
+        printf("tabela impressa ...");
+    }
+
+    getchar();
+
+    menuHash(fileBaseName, fileHashName); 
 }
 
 void strClock(char *sClock){
