@@ -3,6 +3,24 @@
 
 extern int globalComparacoes;
 
+TUserInvest *criaUser(int cod){
+    TUserInvest *user = (TUserInvest *)malloc(sizeof(TUserInvest));
+
+    user->cod = cod;
+    sprintf(user->cpf, "%03d.%03d.%03d-%02d",123, 456, 789, 10);
+    sprintf(user->nome, "Novo Investidor %02d", cod);
+    for(int i=0;i<5;i++){
+        sprintf(user->carteira[i].tag, "NVT%d", i);
+        sprintf(user->carteira[i].nome, "investimento %d", i);
+        user->carteira[i].classe = rand() % 7; // gera entre 0 e 6
+        user->carteira[i].quantidade = rand()%1000; // entra 0 e 1000 ativos
+    }
+
+    user->hash.prox = -1;
+    user->hash.oculpado = true;
+
+    return user;
+}
 //salva um usuario no arquivo
 void writeUser(TUserInvest *user, FILE *out) { 
     fwrite(&user->cod, sizeof(int), 1, out);

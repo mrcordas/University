@@ -87,6 +87,7 @@ void montaTabelaHash(char *baseDeDados, char *tabelaHash){
 int calculaHash(int cod, int compatimentos){
     return (cod % compatimentos);
 }
+
 TUserInvest *buscaInHash(int cod, FILE *fileBase, FILE *fileHash){
     
     TUserInvest *user = NULL;
@@ -118,7 +119,7 @@ void printTabela(char *baseDeDados, char *tabelaHash){
     TUserInvest *x = NULL;
     FILE *base = fopen(baseDeDados, "rb");
     if(!base){
-        perror("Erro");
+        fputs("Sem base de dados!", stdout);
         getchar();
         return;   
     }
@@ -164,7 +165,7 @@ void printTabela(char *baseDeDados, char *tabelaHash){
         pos++;
 
     }
-
+    printf("tabela impressa ...");
     fclose(base);
     fclose(hash);
     fclose(debugHash);

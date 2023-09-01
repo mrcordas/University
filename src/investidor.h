@@ -18,6 +18,8 @@ typedef struct Investidor {// tamenho completo 299bytes
     infoHash hash;
 } TUserInvest;
 
+TUserInvest *criaUser(int cod);
+
 void writeUser(TUserInvest *user, FILE *out);
 
 TUserInvest *readUser(FILE *in);

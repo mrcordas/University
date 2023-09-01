@@ -117,7 +117,7 @@ void initializeDataBase(FILE* file, int numberRecords) {
     int nRand = (rand() + 1)%numberRecords + 1;
     vControlCod[0] = nRand;
     
-    //preenche o arraycom codigos nao repetidos
+    //preenche o array com codigos nao repetidos
     for(int i = 1;i < numberRecords;i++){
         nRand = (rand() + 1)%numberRecords + 1;
         for(int j = 0; j < i; j++){
@@ -837,6 +837,14 @@ void menuHash(char *fileBaseName, char *fileHashName){
     if(atoi(choice) == 1){
         FILE *test = fopen(fileHashName, "rb"); //verifica se existe
         if(!test){
+            FILE *test2 = fopen(fileBaseName, "rb");
+            if(!test2){
+                fputs("Voce nao criou a base de dados ainda!", stdout);
+                getchar();
+                return;  
+            }else{
+                fclose(test2);
+            }
             int qtd_compart;
             printf("Quantos compartimentos quer na tabela?: ");
             scanf("%d", &qtd_compart);
@@ -913,7 +921,6 @@ void menuHash(char *fileBaseName, char *fileHashName){
     }else{
         printf("\n");
         printTabela(fileBaseName, fileHashName);
-        printf("tabela impressa ...");
     }
 
     getchar();
